@@ -1,5 +1,7 @@
 from .productSerializer import (
-    ProductsSerializer, CategorySerializer,
-    ListProductsSerializer, AddProductsSerializer
+    ProductsSerializer,
+    ListProductsSerializer, 
+    AddProductsSerializer
 )
 
+from .categorySerializer import CategorySerializer
