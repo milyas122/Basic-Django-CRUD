@@ -1,12 +1,43 @@
+from asyncore import read
+from importlib.metadata import requires
+from unicodedata import category
 from rest_framework import serializers
-from ..models import Product
 
-class AddProductSerializer(serializers.ModelSerializer):
+from ..models import Product, Category
+
+class CategoryNameField(serializers.RelatedField):
+    def to_representation(self, value):
+        return f"{value.name}"
+
+class ProductsSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Product
         fields = ["title", "quantity", "price", "description", "image_url", "category", "sub_category"]
+    
+    # def create(self, validated_data):
+    #     print(validated_data)
+    #     category = validated_data.pop('category')
+    #     sub_category = validated_data.pop('sub_category')
+        
+    #     category_obj, created = Category.objects.get_or_create(**category)
+    #     subcategory_obj, created = Category.objects.get_or_create(**sub_category)
+    #     product = Product.objects.create(category=category_obj,sub_category=subcategory_obj, **validated_data)
+    #     return product
 
-class ProductsSerializer(serializers.ModelSerializer):
+class AddProductsSerializer(serializers.ModelSerializer):
+    category = serializers.PrimaryKeyRelatedField(queryset=Category.category_object.all())
+    sub_category = serializers.PrimaryKeyRelatedField(queryset=Category.subcategory_object.all(), required = False)
+    
     class Meta:
         model = Product
+        fields = ["title", "quantity", "price", "description", "image_url", "category", "sub_category"]
+    
+class ListProductsSerializer(ProductsSerializer):
+    category = CategoryNameField(read_only=True)
+    sub_category = CategoryNameField(read_only=True)
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
         fields = "__all__"
