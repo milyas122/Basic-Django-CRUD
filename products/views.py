@@ -14,7 +14,7 @@ from .serializers import (
 )
 from products import serializers
 
-from rest_framework import mixins
+from rest_framework import mixins, permissions, authentication
 from rest_framework.generics import GenericAPIView
 
 # Create your views here.
@@ -29,6 +29,8 @@ class ForceCRSFAPIView(GenericAPIView):
         return view
 
 class ProductCreateDetailUpdateDeleteView(APIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    authentication = [authentication.SessionAuthentication]
 
     def get(self,request,format=None):
         products = Product.objects.defer("slug","created_at","updated_at")
@@ -36,7 +38,7 @@ class ProductCreateDetailUpdateDeleteView(APIView):
         return Response(serializers.data)
     
     def post(self,request, format=None):
-        serializer = ProductsSerializer(data=request.data)
+        serializer = AddProductsSerializer(data=request.data)
         if serializer.is_valid():
             # category = serializer.get("category")
             # sub_category = serializer.get("sub_category")
@@ -59,10 +61,6 @@ def productList(request):
         serializer = ProductsSerializer(products, many=True)
         return Response(serializer.data)
 
-# @api_view(['POST'])
-# def addProductView(request):
-#     if request.method == 'POST':
-#         pass
 
 @api_view(['GET'])
 def getCategoryList(request):
