@@ -12,8 +12,13 @@ from .serializers import (
     ListProductsSerializer,
     AddProductsSerializer
 )
+from . mixins import (
+    StaffEditorPermissionMixin
+)
 from products import serializers
-
+from .permissions import (
+    isStaffEditorPermission
+)
 from rest_framework import mixins, permissions, authentication
 from rest_framework.generics import GenericAPIView
 
@@ -28,24 +33,28 @@ class ForceCRSFAPIView(GenericAPIView):
         view.csrf_exempt = False
         return view
 
-class ProductCreateDetailUpdateDeleteView(APIView):
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+class ProductCreateDetailUpdateDeleteView(StaffEditorPermissionMixin,APIView):
+    # permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    # permission_classes = [isStaffEditorPermission]
     authentication = [authentication.SessionAuthentication]
+    
 
-    def get(self,request,format=None):
-        products = Product.objects.defer("slug","created_at","updated_at")
-        serializers = ListProductsSerializer(products,many=True)
+    def get(self,request, pk=None, format=None): 
+        serializers = ListProductsSerializer(self.get_queryset(pk), many=True)
         return Response(serializers.data)
     
     def post(self,request, format=None):
         serializer = AddProductsSerializer(data=request.data)
         if serializer.is_valid():
-            # category = serializer.get("category")
-            # sub_category = serializer.get("sub_category")
-            # serializer.
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
+    def get_queryset(self,pk):
+        if pk:
+            return Product.objects.filter(uuid=pk).defer("slug","created_at","updated_at")
+        else: 
+            return Product.objects.defer("slug","created_at","updated_at")
 
 class CreateProductView(mixins.CreateModelMixin, ForceCRSFAPIView):
     serializer_class = AddProductsSerializer
