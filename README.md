@@ -1,4 +1,3 @@
-# amazon-clone
+# **Basic Crud APIs**
 Django Rest Framework Explore
-First Create Virtual Environment by below command\
-python -m venv env
+
